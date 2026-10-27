@@ -1,0 +1,30 @@
+{
+  "name": "startup-graveyard-server",
+  "version": "1.0.0",
+  "description": "Backend API for Startup Graveyard",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test:collect": "node src/scripts/testCollect.js",
+    "test:pipeline": "node src/scripts/testPipeline.js",
+    "test:pipeline:force": "node src/scripts/testPipeline.js --force",
+    "reset:autopsy": "node src/scripts/resetAutopsy.js",
+    "seed": "node src/scripts/seed.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.7.1",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
