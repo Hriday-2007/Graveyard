@@ -44,7 +44,7 @@ export default function Layout() {
               }
             >
               <Compass className="w-4 h-4" />
-              <span>Graveyard</span>
+              <span>The Archive</span>
             </NavLink>
 
             <NavLink
@@ -58,7 +58,7 @@ export default function Layout() {
               }
             >
               <BarChart3 className="w-4 h-4" />
-              <span>Coroner's Dashboard</span>
+              <span>The Patterns</span>
             </NavLink>
           </nav>
         </div>

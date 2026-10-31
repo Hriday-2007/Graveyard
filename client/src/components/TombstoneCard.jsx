@@ -37,6 +37,10 @@ export default function TombstoneCard({ autopsy, index = 0 }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.5), ease: 'easeOut' }}
       whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      role="link"
+      tabIndex={0}
+      aria-label={`Read the story of ${autopsy.startupName}`}
+      onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === "Enter") handleCardClick(); }}
       onClick={handleCardClick}
       className="group relative cursor-pointer flex flex-col justify-between tombstone-arch bg-gradient-to-b from-[#1c222b] via-[#14181f] to-[#0f1217] border border-zinc-800/80 hover:border-amber-500/40 hover:shadow-[0_10px_35px_-5px_rgba(212,175,55,0.18)] transition-all duration-300 p-6 pt-9 min-h-[340px]"
     >

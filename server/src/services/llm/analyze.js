@@ -58,7 +58,7 @@ function formatSourcesForPrompt(collected) {
     formatted += `[Source ${idx + 1}] Origin: ${s.origin.toUpperCase()}\n`;
     formatted += `Title: ${s.title}\n`;
     formatted += `URL: ${s.url}\n`;
-    formatted += `Content:\n${s.text}\n\n`;
+    formatted += `Content:\n${(s.text || '').slice(0, 6000)}\n\n`;
     formatted += `-------------------------------------\n\n`;
   });
 

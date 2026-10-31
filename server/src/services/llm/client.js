@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 
 const MIN_CALL_GAP_MS = parseInt(process.env.LLM_MIN_GAP_MS || '4000', 10);
-const RETRY_DELAYS = [5000, 15000, 30000];
+const RETRY_DELAYS = [3000, 8000];
+let quotaCooldownUntil = 0;
 
 /**
  * Initialize Google GenAI client
@@ -128,12 +129,19 @@ function createLLMUnavailableError(friendlyMessage, originalError) {
  * log the full original error message, and throw with code "LLM_UNAVAILABLE".
  */
 async function executeWithRetry(callFn) {
+  if (Date.now() < quotaCooldownUntil) {
+    const error = new Error('Gemini quota cooling down'); error.code = 'LLM_EXHAUSTED'; throw error;
+  }
   let attempt = 0;
 
   while (true) {
     try {
       return await callFn();
     } catch (error) {
+      if (getErrorStatus(error) === 429 || /resource_exhausted/i.test(error.message || '')) {
+        quotaCooldownUntil = Date.now() + 60000;
+        const exhausted = new Error('Gemini quota exhausted'); exhausted.code = 'LLM_EXHAUSTED'; throw exhausted;
+      }
       if (isRetryableError(error)) {
         if (attempt < RETRY_DELAYS.length) {
           const delay = RETRY_DELAYS[attempt];

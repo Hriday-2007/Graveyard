@@ -36,7 +36,7 @@ router.get('/stream', async (req, res) => {
     }
   }, 15000);
 
-  req.on('close', () => {
+  res.on('close', () => {
     isClosed = true;
     clearInterval(heartbeat);
   });
@@ -49,6 +49,12 @@ router.get('/stream', async (req, res) => {
     });
 
     if (isClosed) return;
+
+    if (result.fallback) {
+      sendEvent('fallback', result);
+      clearInterval(heartbeat);
+      return res.end();
+    }
 
     // Relevance pre-check rejected the startup
     if (!result._id || result.notFoundReason) {
@@ -69,7 +75,6 @@ router.get('/stream', async (req, res) => {
   } catch (error) {
     if (isClosed) return;
     clearInterval(heartbeat);
-    isClosed = true;
 
     console.error(`[Search Stream Error] For "${query}":`, error.message);
 

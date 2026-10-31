@@ -55,7 +55,9 @@ export default function Home() {
   }, []);
 
   // Fetch autopsies
+  const requestId = useRef(0);
   const fetchAutopsies = (pageNum = 1) => {
+    const id = ++requestId.current;
     setLoading(true);
     setError(null);
 
@@ -78,7 +80,7 @@ export default function Home() {
     api
       .get('/api/autopsies', { params })
       .then((res) => {
-        if (res.data) {
+        if (id === requestId.current && res.data) {
           setAutopsies(res.data.autopsies || []);
           setPage(res.data.page || 1);
           setTotalPages(res.data.pages || 1);
@@ -87,10 +89,11 @@ export default function Home() {
       })
       .catch((err) => {
         console.error('Error fetching autopsies:', err);
+        if (id !== requestId.current) return;
         setError('Failed to load autopsies from the database.');
       })
       .finally(() => {
-        setLoading(false);
+        if (id === requestId.current) setLoading(false);
       });
   };
 
@@ -104,15 +107,8 @@ export default function Home() {
     const query = searchQuery.trim();
     if (!query) return;
 
-    // Check if an existing tombstone matches the name exactly (case-insensitive)
-    const exactMatch = autopsies.find(
-      (a) => a.startupName.toLowerCase() === query.toLowerCase()
-    );
-
-    if (!exactMatch) {
-      setResearchTarget(query);
-      setIsResearchModalOpen(true);
-    }
+    setResearchTarget(query);
+    setIsResearchModalOpen(true);
   };
 
   const handleClearFilters = () => {
@@ -137,7 +133,7 @@ export default function Home() {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-amber-300 text-xs font-serif tracking-wider uppercase"
         >
-          <span>Memento Mori Startuporum</span>
+          <span>An archive of ambition · Est. for the curious</span>
         </motion.div>
 
         <motion.h1
@@ -146,7 +142,7 @@ export default function Home() {
           transition={{ duration: 0.55 }}
           className="font-serif text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-100"
         >
-          Startup Graveyard
+          Great ideas.<br /><em className="text-[#c9bb8c]">Unfortunate endings.</em>
         </motion.h1>
 
         <motion.p
@@ -155,7 +151,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="text-base sm:text-lg text-zinc-400 leading-relaxed font-light"
         >
-          Where ambitious ideas rest in peace. Forensically cited autopsies analyzing why once-hyped companies collapsed.
+          Every failed startup leaves a lesson behind. Wander through the ventures that almost changed the world—and discover what brought them down.
         </motion.p>
 
         {/* Big Search Bar */}
@@ -172,7 +168,8 @@ export default function Home() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search a dead startup... (e.g. Quibi, Vine, Juicero)"
+              aria-label="Search startup archives"
+              placeholder="Find a startup. Unearth its story."
               className="w-full pl-12 pr-28 py-3.5 bg-zinc-900/90 border border-zinc-700/80 rounded-2xl text-zinc-100 placeholder-zinc-500 text-base focus:outline-none focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/20 shadow-lg transition-all"
             />
             <button
@@ -206,6 +203,7 @@ export default function Home() {
         </motion.form>
       </section>
 
+      <div className="archive-heading"><div><span className="eyebrow">THE PERMANENT COLLECTION</span><h2>Gone, but worth learning from.</h2></div><p>{totalCount} {totalCount === 1 ? 'story' : 'stories'} in the archives</p></div>
       {/* Filter and Sort Toolbar */}
       <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 backdrop-blur-sm space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -318,7 +316,7 @@ export default function Home() {
       <section className="space-y-8">
         {loading ? (
           /* Skeletons */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
@@ -378,7 +376,7 @@ export default function Home() {
           </div>
         ) : (
           /* Cards Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
             {autopsies.map((autopsy, index) => (
               <TombstoneCard key={autopsy._id} autopsy={autopsy} index={index} />
             ))}

@@ -65,13 +65,13 @@ export function matchesStartupName(sourceText, startupName) {
  * @param {{ forceRefresh?: boolean, onProgress?: (stage: string, message: string) => void }} [options]
  * @returns {Promise<any>}
  */
-export async function runStartupPipeline(startupName, options = {}) {
+async function executePipeline(startupName, options = {}) {
   const cleanName = (startupName || '').trim();
   if (!cleanName) {
     throw new Error('Startup name must not be empty.');
   }
 
-  const normalizedName = cleanName.toLowerCase();
+  const normalizedName = normalizeTextForMatching(cleanName);
   const reportProgress = (stage, message) => {
     if (typeof options.onProgress === 'function') {
       try {
@@ -82,7 +82,12 @@ export async function runStartupPipeline(startupName, options = {}) {
 
   // Step 1: Check MongoDB cache
   if (!options.forceRefresh) {
-    const cached = await Autopsy.findOne({ normalizedName });
+    let cached = await Autopsy.findOne({ normalizedName });
+    if (!cached) {
+      const records = await Autopsy.find({}).select('startupName normalizedName');
+      const match = records.find(r => normalizeTextForMatching(r.startupName) === normalizedName || normalizeTextForMatching(r.normalizedName) === normalizedName);
+      if (match) cached = await Autopsy.findById(match._id);
+    }
     if (cached) {
       console.log(`[Pipeline] Cache HIT for "${cleanName}" in MongoDB.`);
       reportProgress('done', 'Loaded from archives');
@@ -139,11 +144,20 @@ export async function runStartupPipeline(startupName, options = {}) {
 
   // Step 4: LLM Call 1 - Comprehensive Autopsy & Epitaph Analysis
   reportProgress('analyzing', 'Analyzing post-mortem with AI...');
-  const analysis = await analyzeStartup(collected);
+  let analysis, verified;
+  try {
+  analysis = await analyzeStartup(collected);
 
   // Step 5: LLM Call 2 - Fast Batched Claim & Quote Verification
   reportProgress('verifying', 'Fact-checking claims and founder statements...');
-  const verified = await verifyClaims(analysis, collected);
+  verified = await verifyClaims(analysis, collected);
+  } catch (error) {
+    if (!['LLM_UNAVAILABLE', 'LLM_EXHAUSTED'].includes(error.code)) throw error;
+    return { fallback: true, message: error.code === 'LLM_EXHAUSTED'
+      ? 'Our free AI helper worked itself to death and is now in one of these graves. Grab a shovel: you’ll have to do the digging yourself.'
+      : 'The gravedigger is off duty. Your research is still here—follow the articles and dig into the story yourself.',
+      sources: collected.sources.map(({ title, url, origin, text }) => ({ title, url, origin, text })) };
+  }
 
   // Step 6: Format and save to MongoDB
   const mappedSources = collected.sources.map((s) => ({
@@ -181,4 +195,12 @@ export async function runStartupPipeline(startupName, options = {}) {
   return savedAutopsy;
 }
 
+const inFlight = new Map();
+export function runStartupPipeline(name, options = {}) {
+  const key = normalizeTextForMatching(name);
+  if (inFlight.has(key)) return inFlight.get(key);
+  const pending = executePipeline(name, options).finally(() => inFlight.delete(key));
+  inFlight.set(key, pending);
+  return pending;
+}
 export default runStartupPipeline;

@@ -28,6 +28,7 @@ export default function ResearchModal({ isOpen, startupName, onClose }) {
   const [stageMessage, setStageMessage] = useState('Initiating source discovery...');
   const [status, setStatus] = useState('loading'); // 'loading' | 'notfound' | 'error' | 'success'
   const [errorMessage, setErrorMessage] = useState('');
+  const [articles, setArticles] = useState([]);
   const eventSourceRef = useRef(null);
 
   const startStream = () => {
@@ -123,17 +124,12 @@ export default function ResearchModal({ isOpen, startupName, onClose }) {
       }
     });
 
-    es.onerror = () => {
-      // Handle connection drop
-      if (status === 'loading') {
-        setStatus('error');
-        setErrorMessage('Connection lost or AI service unavailable. Please try again.');
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-      }
-    };
+    es.addEventListener('fallback', (e) => {
+      const data = JSON.parse(e.data);
+      setStatus('error'); setErrorMessage(data.message); setArticles(data.sources || []);
+      es.close(); eventSourceRef.current = null;
+    });
+
   };
 
   useEffect(() => {
@@ -179,7 +175,7 @@ export default function ResearchModal({ isOpen, startupName, onClose }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={{ duration: 0.25 }}
-          className="relative w-full max-w-lg tombstone-arch bg-gradient-to-b from-[#181d24] via-[#12161c] to-[#0c0f13] border border-zinc-700/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] p-6 sm:p-8 pt-10 z-10"
+          className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto tombstone-arch bg-gradient-to-b from-[#181d24] via-[#12161c] to-[#0c0f13] border border-zinc-700/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] p-6 sm:p-8 pt-10 z-10"
         >
           {/* Close button */}
           <button
@@ -302,6 +298,7 @@ export default function ResearchModal({ isOpen, startupName, onClose }) {
               <p className="text-sm text-zinc-400 max-w-sm mx-auto leading-relaxed">
                 {errorMessage || 'The AI service is unavailable right now. Please try again shortly.'}
               </p>
+              {articles.map((a, i) => /^https?:\/\//i.test(a.url) && <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" className="block p-3 border border-zinc-700 rounded-lg text-amber-300 text-left">{a.title}<span className="block text-xs text-zinc-400">{a.origin}</span></a>)}
               <div className="pt-3 flex items-center justify-center gap-3">
                 <button
                   type="button"

@@ -124,3 +124,27 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #3b4252;
 }
+
+/* Archive visual system */
+:root { --paper:#eee9d9; --brass:#c9bb8c; --line:#414637; }
+body { background:radial-gradient(ellipse at 90% 0%,#3d452e55,transparent 45%),#141711; color:var(--paper); }
+header { background:#141711ed!important; border-color:var(--line)!important; }
+.fog-wrapper { opacity:.2; }
+main > div > section:first-child { max-width:none; text-align:left; padding:56px 0 48px; border-bottom:1px solid var(--line); }
+main > div > section:first-child h1 { max-width:1000px; font-family:Georgia,serif; font-weight:400; font-size:clamp(3.3rem,7.5vw,6.8rem); line-height:1.03; letter-spacing:-.055em; }
+main > div > section:first-child > p { max-width:550px; font-size:16px; line-height:1.85; color:#aeb4a4; }
+main > div > section:first-child form { margin-left:0; padding-top:16px; }
+input { background:#20251b!important; border-color:#555e45!important; border-radius:8px!important; }
+input:focus { box-shadow:0 0 0 3px #c9bb8c20!important; }
+.archive-heading { display:flex; justify-content:space-between; align-items:end; gap:20px; }
+.eyebrow { font-size:10px; letter-spacing:.24em; color:var(--brass); }
+.archive-heading h2 { font:32px Georgia,serif; margin-top:12px; letter-spacing:-.025em; }
+.archive-heading p { color:#9da591; font-size:12px; }
+.tombstone-arch { border-radius:110px 110px 10px 10px; background:linear-gradient(140deg,#30372a,#1c2119)!important; border-color:#4a5440!important; box-shadow:inset 0 0 0 6px #ffffff02; }
+.tombstone-arch:hover { border-color:var(--brass)!important; }
+.tombstone-arch h3 { font-family:Georgia,serif; font-weight:400; font-size:32px; }
+.tombstone-arch p { line-height:1.8; }
+footer { background:#10130e!important; border-color:var(--line)!important; }
+:focus-visible { outline:2px solid var(--brass); outline-offset:4px; }
+::selection { background:#c9bb8c; color:#141711; }
+@media(max-width:640px) { .archive-heading { align-items:start; flex-direction:column; } .archive-heading h2 { font-size:26px; } header nav span { font-size:11px; } header a span.font-serif { font-size:14px; } main > div > section:first-child { padding-top:20px; } }
